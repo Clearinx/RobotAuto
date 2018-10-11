@@ -16,6 +16,7 @@ int g,h;
 int i,j;
 int k,l;
 int m,n;
+int dummysdsd;
 char* previous = "";
 char* actual = " ";
 elapsedMillis timer0;
