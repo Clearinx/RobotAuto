@@ -1,14 +1,15 @@
-
 #include <elapsedMillis.h>
-#define MaxValue 0 //105
-#define CompValue 0 //90
-#define LowcompValue 0 //80
-#define MidValue 0 //60
-#define LowValue 0 //30
+#define SuperMaxValue 155
+#define MaxValue 105
+#define CompValue 90
+#define LowcompValue 80
+#define MidValue 60
+#define LowValue 30
 #define Black 200
 #define intervalStop 400
 #define intervalLaneChange 1000
 #define intervalStoreData 100
+#define intervalPrint 1000
 
 int a,b;
 int c,d;
@@ -22,14 +23,22 @@ char* actual = " ";
 elapsedMillis stopTimer;
 elapsedMillis laneChangeTimer;
 elapsedMillis storeDataTimer;
+//elapsedMillis printDataTimer;
 int irDigitalValuesArray[5][7] = {{0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0}};
 int irSensorDigital[7] = {0, 0, 0, 0, 0, 0, 0};
+int sensorCountersByFrame[5] = {0, 0, 0, 0, 0};
+int aSensorCounter;
+int eSensorCounter;
+int gSensorCounter;
+int iSensorCounter;
+int mSensorCounter;
 int incomingByte = 0;
 
 
 int analogpin=8;
 float convert=11.0/1024.0;
 
+int SuperMax = 0;
 int Max = 0;
 int Comp = 0;
 int Lowcomp = 0;
@@ -54,7 +63,8 @@ void Scan()
 {
    int sensorValue=analogRead(analogpin);
    int finalValue=sensorValue*convert;
-     
+   
+   SuperMax=SuperMaxValue+finalValue;
    Max=MaxValue+finalValue;
    Comp=CompValue+finalValue;
    Lowcomp=LowcompValue+finalValue;
@@ -100,55 +110,90 @@ void PrintData()
     Serial.println("");
   }
   Serial.println("");
+  Serial.print(aSensorCounter); Serial.print(""); Serial.print(eSensorCounter); Serial.print(""); Serial.print(gSensorCounter); Serial.print(""); Serial.print(iSensorCounter); Serial.print(""); Serial.print(mSensorCounter); Serial.print("");
+  Serial.println("");
 }
 
 void StoreData() 
 {
-  /*a > Black ? irSensorDigital[0] = 1 : irSensorDigital[0] = 0;
+  a > Black ? irSensorDigital[0] = 1 : irSensorDigital[0] = 0;
   c > Black ? irSensorDigital[1] = 1 : irSensorDigital[1] = 0;
   e > Black ? irSensorDigital[2] = 1 : irSensorDigital[2] = 0;
   g > Black ? irSensorDigital[3] = 1 : irSensorDigital[3] = 0;
   i > Black ? irSensorDigital[4] = 1 : irSensorDigital[4] = 0;
   k > Black ? irSensorDigital[5] = 1 : irSensorDigital[5] = 0;
-  m > Black ? irSensorDigital[6] = 1 : irSensorDigital[6] = 0;*/
-  irSensorDigital[0] = a;
-  irSensorDigital[1] = c;
-  irSensorDigital[2] = e;
-  irSensorDigital[3] = g;
-  irSensorDigital[4] = i;
-  irSensorDigital[5] = k;
-  irSensorDigital[6] = m;
+  m > Black ? irSensorDigital[6] = 1 : irSensorDigital[6] = 0;
   for (int i = 4; i >= 1; i--)
   {
     memcpy(irDigitalValuesArray[i], irDigitalValuesArray[i - 1], sizeof(irDigitalValuesArray[i - 1]));
   }
   memcpy(irDigitalValuesArray[0], irSensorDigital, sizeof(irDigitalValuesArray[0]));
+  for (int j = 0; j < 5; j++)
+  {
+    sensorCountersByFrame[j]  = 0;
+  }
+  aSensorCounter = 0;
+  eSensorCounter = 0;
+  gSensorCounter = 0;
+  iSensorCounter = 0;
+  mSensorCounter = 0;
+  for (int i = 0; i < 5; i++)
+  {
+    for (int j = 0; j < 7; j++)
+    {
+       if(irDigitalValuesArray[i][j] == 1)
+       {
+          sensorCountersByFrame[i]++;
+          switch(j)
+          {
+            case 0:
+              aSensorCounter++;
+              break;
+            case 2:
+              eSensorCounter++;
+              break;
+            case 3:
+              gSensorCounter++;
+              break;
+            case 4:
+              iSensorCounter++;
+              break;
+            case 6:
+              mSensorCounter++;
+              break;
+            default:
+              break;
+          }
+       }
+    }
+  }
   storeDataTimer = 0;
 }
 void setup() 
 {
-Serial.begin(9600);
-pinMode(6,OUTPUT);
+  Serial.begin(9600);
+  pinMode(6,OUTPUT);
 
-pinMode(dir1PinA,OUTPUT);
-pinMode(dir2PinA,OUTPUT);
-pinMode(speedPinA,OUTPUT);
-pinMode(dir1PinB,OUTPUT);
-pinMode(dir2PinB,OUTPUT);
-pinMode(speedPinB,OUTPUT);
-stopTimer = 0;
-storeDataTimer = 0;
+  pinMode(dir1PinA,OUTPUT);
+  pinMode(dir2PinA,OUTPUT);
+  pinMode(speedPinA,OUTPUT);
+  pinMode(dir1PinB,OUTPUT);
+  pinMode(dir2PinB,OUTPUT);
+  pinMode(speedPinB,OUTPUT);
+  stopTimer = 0;
+  storeDataTimer = 0;
+  //printDataTimer = 0;
 }
 
 void loop() {
    if (Serial.available() > 0) {
      incomingByte = Serial.read();
      Serial.println(incomingByte);
-     if(incomingByte == 49)
+     if(incomingByte == 1)
      {
        Stop();
      }
-     else if (incomingByte == 50)
+     else if (incomingByte == 2)
      {
        stopped = false;
      }
@@ -159,21 +204,22 @@ void loop() {
      if (storeDataTimer >= intervalStoreData)
      {
        StoreData();
-       PrintData();
      }
-
     if(stopAlert == true)
     {
       if (stopTimer >= intervalStop)
       {
-        if((a>Black &&c>Black &&e>Black &&g>Black &&i>Black &&k>Black &&m>Black || a<Black &&c<Black &&e<Black &&g<Black &&i<Black &&k<Black &&m<Black))
+        
+        if((sensorCountersByFrame[0] >= 4 || sensorCountersByFrame[0] == 0) && (sensorCountersByFrame[1] >= 4 || sensorCountersByFrame[1] == 0) && (sensorCountersByFrame[2] >= 4 || sensorCountersByFrame[2] == 0))
         {
-              Serial.print(a); Serial.print(" ");Serial.print(c); Serial.print(" ");Serial.print(e); Serial.print(" ");Serial.print(g); Serial.print(" ");Serial.print(i); Serial.print(" ");Serial.print(k); Serial.print(" ");Serial.print(m); Serial.println("");
+              PrintData();
               Serial.println("Stop");
               Stop();
         }
         else
         {
+          PrintData();
+          Serial.println("Intersection");
           stopAlert = false;
         }
       }
@@ -183,11 +229,10 @@ void loop() {
     {
       if(stopAlert == false)
       {
-        Serial.print(a); Serial.print(" ");Serial.print(c); Serial.print(" ");Serial.print(e); Serial.print(" ");Serial.print(g); Serial.print(" ");Serial.print(i); Serial.print(" ");Serial.print(k); Serial.print(" ");Serial.print(m); Serial.println("");
         stopTimer = 0;
         Serial.println("StopAlert");
-        analogWrite(speedPinA, Max);
-        analogWrite(speedPinB, Max);
+        analogWrite(speedPinA, SuperMax);
+        analogWrite(speedPinB, SuperMax);
         digitalWrite(dir1PinA, LOW);
         digitalWrite(dir2PinA, HIGH);
         digitalWrite(dir1PinB, LOW);
@@ -196,29 +241,12 @@ void loop() {
         delay(100);
       }
     }
-    /*if(changeLaneLeftAlert)
+    if(aSensorCounter >= 3 && (eSensorCounter>=2 || gSensorCounter >= 2 || iSensorCounter >= 2))
     {
-      if(laneChangeTimer >= intervalLaneChange)
-      {
-        if((a<Black &&c<Black &&e<Black &&g<Black &&i<Black &&k<Black &&m<Black) || ((a>Black && g>Black && c<Black &&e<Black &&i<Black &&k<Black &&m<Black) || (a>Black && i>Black && c<Black &&e<Black &&g<Black && k<Black &&m<Black)))
-        {
-          Serial.println("LaneChangeToLeft");
-          Serial.print(a); Serial.print(" ");Serial.print(c); Serial.print(" ");Serial.print(e); Serial.print(" ");Serial.print(g); Serial.print(" ");Serial.print(i); Serial.print(" ");Serial.print(k); Serial.print(" ");Serial.print(m); Serial.println("");
-          changeLaneLeftAlert = false;
-        }
-        else
-        {
-          changeLaneLeftAlert = false;
-        }
-      }
+      PrintData();
+      Serial.println("CahangeLaneLeft");
     }
-    else if(!changeLaneLeftAlert && ((a>Black && g>Black && c<Black &&e<Black &&i<Black &&k<Black &&m<Black) || (a>Black && i>Black && c<Black &&e<Black &&g<Black && k<Black &&m<Black)))
-    {
-       Serial.println("LaneChangeToLeftAlert");
-       Serial.print(a); Serial.print(" ");Serial.print(c); Serial.print(" ");Serial.print(e); Serial.print(" ");Serial.print(g); Serial.print(" ");Serial.print(i); Serial.print(" ");Serial.print(k); Serial.print(" ");Serial.print(m); Serial.println("");
-       laneChangeTimer = 0;
-       changeLaneLeftAlert = true;
-    }*/
+    else{PrintData();}
     if (a>Black)
     {
       if(m>Black)
@@ -286,6 +314,10 @@ void loop() {
       Serial.println(actual);
     }
     previous = actual;
+   }
+   else
+   {
+    Stop();
    }
 }
 
