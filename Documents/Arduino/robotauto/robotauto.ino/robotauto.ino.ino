@@ -235,11 +235,18 @@ void loop() {
     {
       if(changeLaneLeftTimer <= intervalLaneChange)
       {
-        if(sensorCountersByFrame[0] == 0 && sensorCountersByFrame[1] == 0 && sensorCountersByFrame[2] == 0)
+        if((sensorCountersByFrame[0] == 0 && sensorCountersByFrame[1] == 0 && sensorCountersByFrame[2] == 0))
         {
-          Serial.println("CahangingLaneLeft!");
-          PrintData();
-          changingLaneToLeft = true;
+          if((irDigitalValuesArray[3][0] == 1 || irDigitalValuesArray[3][6] == 1) && sensorCountersByFrame[3] == 1)
+          {
+            changeLaneLeftAlert = false;
+          }
+          else
+          {
+            Serial.println("CahangingLaneLeft!");
+            PrintData();
+            changingLaneToLeft = true;
+          }
         }
       }
       else
@@ -253,9 +260,16 @@ void loop() {
       {
         if(sensorCountersByFrame[0] == 0 && sensorCountersByFrame[1] == 0 && sensorCountersByFrame[2] == 0)
         {
-          Serial.println("CahangingLaneRight!");
-          PrintData();
-          changingLaneToRight = true;
+          if((irDigitalValuesArray[3][0] == 1 || irDigitalValuesArray[3][6] == 1) && sensorCountersByFrame[3] == 1)
+          {
+            changeLaneRightAlert = false;
+          }
+          else
+          {
+            Serial.println("CahangingLaneRight!");
+            PrintData();
+            changingLaneToRight = true;
+          }
         }
       }
       else
@@ -289,11 +303,35 @@ void loop() {
       }
       else if (k>Black)
       {
-        if(!changeLaneLeftAlert && eSensorCounter == 0)
+        actual = "A&K";
+        K();
+      }
+      else if(e>Black)
+      {
+        if(!changeLaneLeftAlert)
         {
           SetChangeLaneLeftAlert();
         }
-        K();
+        actual = "A&E";
+        E();
+      }
+      else if(g>Black)
+      {
+        if(!changeLaneLeftAlert)
+        {
+          SetChangeLaneLeftAlert();
+        }
+        actual = "A&G";
+        G();
+      }
+      else if(I>Black)
+      {
+        if(!changeLaneLeftAlert)
+        {
+          SetChangeLaneLeftAlert();
+        }
+        actual = "A&I";
+        I();
       }
       else
       {
@@ -312,10 +350,6 @@ void loop() {
       else if (k>Black)
       {
         actual = "C&K";
-        if(!changeLaneLeftAlert && eSensorCounter == 0)
-        {
-          SetChangeLaneLeftAlert();
-        }
         K();
       }
       else
@@ -527,6 +561,7 @@ void M()
 void SetChangeLaneLeftAlert()
 {
       Serial.println("CahangeLaneLeftAlert!");
+      PrintData();
       changeLaneLeftAlert = true;
       changeLaneLeftTimer = 0;
 }
