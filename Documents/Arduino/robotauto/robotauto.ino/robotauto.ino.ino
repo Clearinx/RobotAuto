@@ -7,7 +7,7 @@
 #define LowValue 30
 #define Black 200
 #define intervalStop 400
-#define intervalLaneChange 1000
+#define intervalLaneChange 2000
 #define intervalStoreData 100
 #define intervalPrint 1000
 
@@ -23,7 +23,8 @@ char* actual = " ";
 elapsedMillis stopTimer;
 elapsedMillis laneChangeTimer;
 elapsedMillis storeDataTimer;
-//elapsedMillis printDataTimer;
+elapsedMillis changeLaneLeftTimer;
+elapsedMillis changeLaneRightTimer;
 int irDigitalValuesArray[5][7] = {{0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0}};
 int irSensorDigital[7] = {0, 0, 0, 0, 0, 0, 0};
 int sensorCountersByFrame[5] = {0, 0, 0, 0, 0};
@@ -44,8 +45,10 @@ int Comp = 0;
 int Lowcomp = 0;
 int Mid = 0;
 int Low = 0;
+boolean changingLaneToLeft = false;
+boolean changingLaneToRight = false;
 boolean changeLaneLeftAlert = false;
-boolean changeLaneRight = false;
+boolean changeLaneRightAlert = false;
 boolean stopAlert = false;
 boolean stopped = false;
 
@@ -205,48 +208,78 @@ void loop() {
      {
        StoreData();
      }
+   if(!changingLaneToLeft && !changingLaneToRight)
+   {
     if(stopAlert == true)
     {
       if (stopTimer >= intervalStop)
       {
-        
-        if((sensorCountersByFrame[0] >= 4 || sensorCountersByFrame[0] == 0) && (sensorCountersByFrame[1] >= 4 || sensorCountersByFrame[1] == 0) && (sensorCountersByFrame[2] >= 4 || sensorCountersByFrame[2] == 0))
-        {
-              PrintData();
-              Serial.println("Stop");
-              Stop();
-        }
-        else
-        {
+      
+      if((sensorCountersByFrame[0] >= 4 || sensorCountersByFrame[0] == 0) && (sensorCountersByFrame[1] >= 4 || sensorCountersByFrame[1] == 0) && (sensorCountersByFrame[2] >= 4 || sensorCountersByFrame[2] == 0))
+      {
           PrintData();
-          Serial.println("Intersection");
-          stopAlert = false;
+          Serial.println("Stop");
+          Stop();
+          return;
+      }
+      else
+      {
+        PrintData();
+        Serial.println("Intersection");
+        stopAlert = false;
+      }
+      }
+    
+    }
+    if(changeLaneLeftAlert == true)
+    {
+      if(changeLaneLeftTimer <= intervalLaneChange)
+      {
+        if(sensorCountersByFrame[0] == 0 && sensorCountersByFrame[1] == 0 && sensorCountersByFrame[2] == 0)
+        {
+          Serial.println("CahangingLaneLeft!");
+          PrintData();
+          changingLaneToLeft = true;
         }
       }
-  
+      else
+      {
+        changeLaneLeftAlert = false;
+      }
     }
+    else if(changeLaneRightAlert == true)
+    {
+      if(changeLaneRightTimer <= intervalLaneChange)
+      {
+        if(sensorCountersByFrame[0] == 0 && sensorCountersByFrame[1] == 0 && sensorCountersByFrame[2] == 0)
+        {
+          Serial.println("CahangingLaneRight!");
+          PrintData();
+          changingLaneToRight = true;
+        }
+      }
+      else
+      {
+        changeLaneRightAlert = false;
+      }
+    }
+    
     if(!stopped && a>Black &&c>Black &&e>Black &&g>Black &&i>Black &&k>Black &&m>Black)
     {
       if(stopAlert == false)
       {
-        stopTimer = 0;
-        Serial.println("StopAlert");
-        analogWrite(speedPinA, SuperMax);
-        analogWrite(speedPinB, SuperMax);
-        digitalWrite(dir1PinA, LOW);
-        digitalWrite(dir2PinA, HIGH);
-        digitalWrite(dir1PinB, LOW);
-        digitalWrite(dir2PinB, HIGH);
-        stopAlert = true;
-        delay(100);
+      stopTimer = 0;
+      Serial.println("StopAlert");
+      analogWrite(speedPinA, SuperMax);
+      analogWrite(speedPinB, SuperMax);
+      digitalWrite(dir1PinA, LOW);
+      digitalWrite(dir2PinA, HIGH);
+      digitalWrite(dir1PinB, LOW);
+      digitalWrite(dir2PinB, HIGH);
+      stopAlert = true;
+      delay(200);
       }
     }
-    if(aSensorCounter >= 3 && (eSensorCounter>=2 || gSensorCounter >= 2 || iSensorCounter >= 2))
-    {
-      PrintData();
-      Serial.println("CahangeLaneLeft");
-    }
-    else{PrintData();}
     if (a>Black)
     {
       if(m>Black)
@@ -256,7 +289,10 @@ void loop() {
       }
       else if (k>Black)
       {
-        actual = "A&K";
+        if(!changeLaneLeftAlert && eSensorCounter == 0)
+        {
+          SetChangeLaneLeftAlert();
+        }
         K();
       }
       else
@@ -276,9 +312,13 @@ void loop() {
       else if (k>Black)
       {
         actual = "C&K";
+        if(!changeLaneLeftAlert && eSensorCounter == 0)
+        {
+          SetChangeLaneLeftAlert();
+        }
         K();
       }
-          else
+      else
       {
         actual = "C";
         C();
@@ -286,16 +326,28 @@ void loop() {
     }
     else if (g>Black)
     {
+      if((m>Black) && !changeLaneRightAlert)
+      {
+        SetChangeLaneRightAlert();
+      }
       actual = "G";
       G();
     }
     else if (i>Black)
     {
+      if((m>Black) && !changeLaneRightAlert)
+      {
+        SetChangeLaneRightAlert();
+      }
       actual = "I";
       I();
     }
     else if (e>Black)
     {
+      if((m>Black) && !changeLaneRightAlert)
+      {
+        SetChangeLaneRightAlert();
+      }
       actual = "E";
       E();
     }
@@ -314,10 +366,15 @@ void loop() {
       Serial.println(actual);
     }
     previous = actual;
-   }
-   else
-   {
-    Stop();
+     }
+     else if(changingLaneToLeft)
+     {
+       ChangeLaneToLeft();
+     }
+     else if(changingLaneToRight)
+     {
+       ChangeLaneToRight();
+     }
    }
 }
 
@@ -467,41 +524,58 @@ void M()
   digitalWrite(dir2PinB, HIGH);
 }
 
+void SetChangeLaneLeftAlert()
+{
+      Serial.println("CahangeLaneLeftAlert!");
+      changeLaneLeftAlert = true;
+      changeLaneLeftTimer = 0;
+}
+
+void SetChangeLaneRightAlert()
+{
+      Serial.println("CahangeLaneRightAlert!");
+      PrintData();
+      changeLaneRightAlert = true;
+      changeLaneRightTimer = 0;
+}
+
 void ChangeLaneToLeft()
 {
   analogWrite(speedPinA, 0);
-  analogWrite(speedPinB, Comp);
+  analogWrite(speedPinB, Max);
   digitalWrite(dir1PinA, LOW);
   digitalWrite(dir2PinA, HIGH);
   digitalWrite(dir1PinB, LOW);
   digitalWrite(dir2PinB, HIGH);
-  delay(300);
+  delay(400);
   analogWrite(speedPinA, Max);
   analogWrite(speedPinB, Max);
   digitalWrite(dir1PinA, LOW);
   digitalWrite(dir2PinA, HIGH);
   digitalWrite(dir1PinB, LOW);
   digitalWrite(dir2PinB, HIGH);
-  delay(300);
+  changingLaneToLeft = false;
+  changeLaneLeftAlert = false;
   
 }
 
 void ChangeLaneToRight()
 {
-  analogWrite(speedPinA, Comp);
+  analogWrite(speedPinA, Max);
   analogWrite(speedPinB, 0);
   digitalWrite(dir1PinA, LOW);
   digitalWrite(dir2PinA, HIGH);
   digitalWrite(dir1PinB, LOW);
   digitalWrite(dir2PinB, HIGH);
-  delay(300);
+  delay(400);
   analogWrite(speedPinA, Max);
   analogWrite(speedPinB, Max);
   digitalWrite(dir1PinA, LOW);
   digitalWrite(dir2PinA, HIGH);
   digitalWrite(dir1PinB, LOW);
   digitalWrite(dir2PinB, HIGH);
-  delay(300);
+  changingLaneToRight = false;
+  changeLaneRightAlert = false;
   
 }
 
