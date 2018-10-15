@@ -215,19 +215,19 @@ void loop() {
       if (stopTimer >= intervalStop)
       {
       
-      if((sensorCountersByFrame[0] >= 4 || sensorCountersByFrame[0] == 0) && (sensorCountersByFrame[1] >= 4 || sensorCountersByFrame[1] == 0) && (sensorCountersByFrame[2] >= 4 || sensorCountersByFrame[2] == 0))
-      {
+        if((sensorCountersByFrame[0] >= 4 || sensorCountersByFrame[0] == 0) && (sensorCountersByFrame[1] >= 4 || sensorCountersByFrame[1] == 0) && (sensorCountersByFrame[2] >= 4 || sensorCountersByFrame[2] == 0))
+        {
+            PrintData();
+            Serial.println("Stop");
+            Stop();
+            return;
+        }
+        else
+        {
           PrintData();
-          Serial.println("Stop");
-          Stop();
-          return;
-      }
-      else
-      {
-        PrintData();
-        Serial.println("Intersection");
-        stopAlert = false;
-      }
+          Serial.println("Intersection");
+          stopAlert = false;
+        }
       }
     
     }
@@ -294,8 +294,68 @@ void loop() {
       delay(200);
       }
     }
-    if (a>Black)
+    if (g>Black)
     {
+      if((m>Black) && !changeLaneRightAlert)
+      {
+        SetChangeLaneRightAlert();
+      }
+      else if(a > Black && !changeLaneLeftAlert)
+      {
+        SetChangeLaneLeftAlert();
+      }
+      actual = "G";
+      G();
+    }
+    else if (i>Black)
+    {
+      if((m>Black) && !changeLaneRightAlert)
+      {
+        SetChangeLaneRightAlert();
+      }
+      else if(a > Black && !changeLaneLeftAlert)
+      {
+        SetChangeLaneLeftAlert();
+      }
+      actual = "I";
+      I();
+    }
+    else if (e>Black)
+    {
+      if((m>Black) && !changeLaneRightAlert)
+      {
+        SetChangeLaneRightAlert();
+      }
+      else if(a > Black && !changeLaneLeftAlert)
+      {
+        SetChangeLaneLeftAlert();
+      }
+      actual = "E";
+      E();
+    }
+    else if (a>Black)
+    {
+      /*if(e>Black)
+      {
+        if(!changeLaneLeftAlert)
+        {
+          SetChangeLaneLeftAlert();
+        }
+      }
+      else if(g>Black)
+      {
+        if(!changeLaneLeftAlert)
+        {
+          SetChangeLaneLeftAlert();
+        }
+      }
+      else if(I>Black)
+      {
+        if(!changeLaneLeftAlert)
+        {
+          SetChangeLaneLeftAlert();
+        }
+      }*/
       if(m>Black)
       {
         actual = "A&M";
@@ -305,33 +365,6 @@ void loop() {
       {
         actual = "A&K";
         K();
-      }
-      else if(e>Black)
-      {
-        if(!changeLaneLeftAlert)
-        {
-          SetChangeLaneLeftAlert();
-        }
-        actual = "A&E";
-        E();
-      }
-      else if(g>Black)
-      {
-        if(!changeLaneLeftAlert)
-        {
-          SetChangeLaneLeftAlert();
-        }
-        actual = "A&G";
-        G();
-      }
-      else if(I>Black)
-      {
-        if(!changeLaneLeftAlert)
-        {
-          SetChangeLaneLeftAlert();
-        }
-        actual = "A&I";
-        I();
       }
       else
       {
@@ -357,33 +390,6 @@ void loop() {
         actual = "C";
         C();
       }
-    }
-    else if (g>Black)
-    {
-      if((m>Black) && !changeLaneRightAlert)
-      {
-        SetChangeLaneRightAlert();
-      }
-      actual = "G";
-      G();
-    }
-    else if (i>Black)
-    {
-      if((m>Black) && !changeLaneRightAlert)
-      {
-        SetChangeLaneRightAlert();
-      }
-      actual = "I";
-      I();
-    }
-    else if (e>Black)
-    {
-      if((m>Black) && !changeLaneRightAlert)
-      {
-        SetChangeLaneRightAlert();
-      }
-      actual = "E";
-      E();
     }
     else if (k>Black)
     {
@@ -582,9 +588,16 @@ void ChangeLaneToLeft()
   digitalWrite(dir2PinA, HIGH);
   digitalWrite(dir1PinB, LOW);
   digitalWrite(dir2PinB, HIGH);
-  delay(400);
+  delay(300);
   analogWrite(speedPinA, Max);
   analogWrite(speedPinB, Max);
+  digitalWrite(dir1PinA, LOW);
+  digitalWrite(dir2PinA, HIGH);
+  digitalWrite(dir1PinB, LOW);
+  digitalWrite(dir2PinB, HIGH);
+  delay(100);
+  analogWrite(speedPinA, Comp);
+  analogWrite(speedPinB, Comp);
   digitalWrite(dir1PinA, LOW);
   digitalWrite(dir2PinA, HIGH);
   digitalWrite(dir1PinB, LOW);
@@ -602,13 +615,21 @@ void ChangeLaneToRight()
   digitalWrite(dir2PinA, HIGH);
   digitalWrite(dir1PinB, LOW);
   digitalWrite(dir2PinB, HIGH);
-  delay(400);
+  delay(300);
   analogWrite(speedPinA, Max);
   analogWrite(speedPinB, Max);
   digitalWrite(dir1PinA, LOW);
   digitalWrite(dir2PinA, HIGH);
   digitalWrite(dir1PinB, LOW);
   digitalWrite(dir2PinB, HIGH);
+  delay(100);
+  analogWrite(speedPinA, Comp);
+  analogWrite(speedPinB, Comp);
+  digitalWrite(dir1PinA, LOW);
+  digitalWrite(dir2PinA, HIGH);
+  digitalWrite(dir1PinB, LOW);
+  digitalWrite(dir2PinB, HIGH);
+  
   changingLaneToRight = false;
   changeLaneRightAlert = false;
   
