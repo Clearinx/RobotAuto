@@ -1,11 +1,11 @@
 #include <elapsedMillis.h>
-#define SuperMaxValue 145
-#define MaxValue 75
-#define CompValue 60
-#define LowcompValue 50
-#define MidValue 40
-#define LowValue 20
-#define Black 200
+#define SuperMaxValue 255
+#define MaxValue 255
+#define CompValue 255
+#define LowcompValue 200
+#define MidValue 0
+#define LowValue 0
+#define Black 250
 #define intervalStop 1000
 #define intervalLaneChange 2000
 #define intervalStoreData 100
@@ -204,6 +204,8 @@ void loop() {
    if(!stopped)
    {
      Scan();
+     Serial.print(a); Serial.print(" "); Serial.print(c); Serial.print(" "); Serial.print(e); Serial.print(" "); Serial.print(g); Serial.print(" "); Serial.print(i); Serial.print(" "); Serial.print(m); Serial.print(" ");
+       Serial.println("");
      if (storeDataTimer >= intervalStoreData)
      {
        StoreData();
@@ -294,6 +296,69 @@ void loop() {
       delay(200);
       }
     }
+    /*if (a>Black)
+    {
+      if(m>Black)
+      {
+        actual = "A&M";
+        M();
+      }
+      else if (k>Black)
+      {
+        actual = "A&K";
+        K();
+      }
+      else
+      {
+        actual = "A";
+        A();
+      }
+    }
+    else if (c>Black)
+    {
+      if(m>Black)
+      {
+        actual = "C&M";
+        M();
+      }
+      else if (k>Black)
+      {
+        actual = "C&K";
+        K();
+      }
+      else
+      {
+        actual = "C";
+        C();
+      }
+    }
+    else if (k>Black)
+    {
+      actual = "K";
+      K();
+    }
+    else if (m>Black)
+    {
+      actual = "M";
+      M();
+    }
+    else if (g>Black)
+    {
+      actual = "G";
+      G();
+    }
+    else if (i>Black)
+    {
+      actual = "I";
+      I();
+    }
+    else if (e>Black)
+    {
+      actual = "E";
+      E();
+    }
+    */
+    
     if (g>Black)
     {
       if((m>Black) && !changeLaneRightAlert && !stopAlert)
