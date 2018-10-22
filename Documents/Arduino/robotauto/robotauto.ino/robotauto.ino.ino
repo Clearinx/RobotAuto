@@ -6,7 +6,7 @@
 #define MidValue 0
 #define LowValue 0
 #define Black 250
-#define intervalStop 1000
+#define intervalStop 2000
 #define intervalLaneChange 2000
 #define intervalStoreData 100
 #define intervalPrint 1000
@@ -65,7 +65,8 @@ int speedPinB = 10; // Needs to be a PWM pin to be able to control motor speed
 void Scan()
 {
    int sensorValue=analogRead(analogpin);
-   int finalValue=sensorValue*convert;
+   //int finalValue=sensorValue*convert;
+   int finalValue = 0;
    
    SuperMax=SuperMaxValue+finalValue;
    Max=MaxValue+finalValue;
@@ -192,11 +193,11 @@ void loop() {
    if (Serial.available() > 0) {
      incomingByte = Serial.read();
      Serial.println(incomingByte);
-     if(incomingByte == 1)
+     if(incomingByte == 49)
      {
        Stop();
      }
-     else if (incomingByte == 2)
+     else if (incomingByte == 50)
      {
        stopped = false;
      }
@@ -204,8 +205,8 @@ void loop() {
    if(!stopped)
    {
      Scan();
-     Serial.print(a); Serial.print(" "); Serial.print(c); Serial.print(" "); Serial.print(e); Serial.print(" "); Serial.print(g); Serial.print(" "); Serial.print(i); Serial.print(" "); Serial.print(m); Serial.print(" ");
-       Serial.println("");
+     //Serial.print(a); Serial.print(" "); Serial.print(c); Serial.print(" "); Serial.print(e); Serial.print(" "); Serial.print(g); Serial.print(" "); Serial.print(i); Serial.print(" "); Serial.print(k); Serial.print(" ");Serial.print(m); Serial.print(" ");
+     //  Serial.println("");
      if (storeDataTimer >= intervalStoreData)
      {
        StoreData();
@@ -233,7 +234,7 @@ void loop() {
       }
     
     }
-    if(changeLaneLeftAlert == true)
+    else if(changeLaneLeftAlert == true)
     {
       if(changeLaneLeftTimer <= intervalLaneChange)
       {
@@ -460,6 +461,14 @@ void loop() {
        ChangeLaneToRight();
      }
    }
+   else
+   {
+    Scan();
+    StoreData();
+    Serial.print(a); Serial.print(" "); Serial.print(c); Serial.print(" "); Serial.print(e); Serial.print(" "); Serial.print(g); Serial.print(" "); Serial.print(i); Serial.print(" "); Serial.print(k); Serial.print(" ");Serial.print(m); Serial.print(" ");
+    Serial.println("");
+    delay(500);
+   }
 }
 
 void A()
@@ -611,7 +620,9 @@ void M()
 void SetChangeLaneLeftAlert()
 {
       Serial.println("CahangeLaneLeftAlert!");
-      PrintData();
+      //PrintData();
+      Serial.print(a); Serial.print(" "); Serial.print(c); Serial.print(" "); Serial.print(e); Serial.print(" "); Serial.print(g); Serial.print(" "); Serial.print(i); Serial.print(" "); Serial.print(k); Serial.print(" ");Serial.print(m); Serial.print(" ");
+      Serial.println("");
       changeLaneLeftAlert = true;
       changeLaneLeftTimer = 0;
 }
@@ -619,7 +630,8 @@ void SetChangeLaneLeftAlert()
 void SetChangeLaneRightAlert()
 {
       Serial.println("CahangeLaneRightAlert!");
-      PrintData();
+      Serial.print(a); Serial.print(" "); Serial.print(c); Serial.print(" "); Serial.print(e); Serial.print(" "); Serial.print(g); Serial.print(" "); Serial.print(i); Serial.print(" "); Serial.print(k); Serial.print(" ");Serial.print(m); Serial.print(" ");
+      Serial.println("");
       changeLaneRightAlert = true;
       changeLaneRightTimer = 0;
 }
@@ -649,7 +661,7 @@ void ChangeLaneToLeft()
   delay(100);
   boolean foundLine = false;
   analogWrite(speedPinA, Lowcomp);
-  analogWrite(speedPinB, Comp);
+  analogWrite(speedPinB, Lowcomp);
   digitalWrite(dir1PinA, LOW);
   digitalWrite(dir2PinA, HIGH);
   digitalWrite(dir1PinB, LOW);
@@ -662,9 +674,10 @@ void ChangeLaneToLeft()
     {
       foundLine = true;
     }
+    Serial.println("Searching for line");
     delayMicroseconds(500);
   }
-  analogWrite(speedPinA, 0);
+  /*analogWrite(speedPinA, 0);
   analogWrite(speedPinB, 0);
   digitalWrite(dir1PinA, LOW);
   digitalWrite(dir2PinA, HIGH);
@@ -685,8 +698,8 @@ void ChangeLaneToLeft()
     else
     {
       Serial.println("Searching for line again");
-      analogWrite(speedPinA, 0);
-      analogWrite(speedPinB, Max);
+      analogWrite(speedPinA, Max);
+      analogWrite(speedPinB, 0);
       digitalWrite(dir1PinA, LOW);
       digitalWrite(dir2PinA, HIGH);
       digitalWrite(dir1PinB, LOW);
@@ -694,6 +707,7 @@ void ChangeLaneToLeft()
     }
     delay(100);
   }
+  */
   changingLaneToLeft = false;
   changeLaneLeftAlert = false;
   
@@ -723,7 +737,7 @@ void ChangeLaneToRight()
   digitalWrite(dir2PinB, HIGH);
   delay(100);
   boolean foundLine = false;
-  analogWrite(speedPinA, Comp);
+  analogWrite(speedPinA, Lowcomp);
   analogWrite(speedPinB, Lowcomp);
   digitalWrite(dir1PinA, LOW);
   digitalWrite(dir2PinA, HIGH);
@@ -740,7 +754,7 @@ void ChangeLaneToRight()
     Serial.println("Searching for line");
     delayMicroseconds(500);
   }
-  analogWrite(speedPinA, 0);
+  /*analogWrite(speedPinA, 0);
   analogWrite(speedPinB, 0);
   digitalWrite(dir1PinA, LOW);
   digitalWrite(dir2PinA, HIGH);
@@ -770,7 +784,7 @@ void ChangeLaneToRight()
     }
     delay(100);
   }
-  
+  */
   changingLaneToRight = false;
   changeLaneRightAlert = false;
   
