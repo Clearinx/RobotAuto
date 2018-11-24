@@ -1,8 +1,8 @@
 #include <elapsedMillis.h>
-#define SuperMaxValue 255
-#define MaxValue 255
-#define CompValue 255
-#define LowcompValue 200
+#define SuperMaxValue 200
+#define MaxValue 200
+#define CompValue 200
+#define LowcompValue 145
 #define MidValue 0
 #define LowValue 0
 #define Black 250
@@ -37,7 +37,7 @@ int incomingByte = 0;
 
 
 int analogpin=8;
-float convert=11.0/1024.0;
+float convert=55.0/1024.0;
 
 int SuperMax = 0;
 int Max = 0;
@@ -53,9 +53,9 @@ boolean stopAlert = false;
 boolean stopped = false;
 
 // Motor 1
-int dir1PinA = 2;
-int dir2PinA = 3;
-int speedPinA = 9; // Needs to be a PWM pin to be able to control motor speed
+int dir1PinA = 11;
+int dir2PinA = 12;
+int speedPinA = 13; // Needs to be a PWM pin to be able to control motor speed
 
 // Motor 2
 int dir1PinB = 4;
@@ -65,8 +65,7 @@ int speedPinB = 10; // Needs to be a PWM pin to be able to control motor speed
 void Scan()
 {
    int sensorValue=analogRead(analogpin);
-   //int finalValue=sensorValue*convert;
-   int finalValue = 0;
+   int finalValue=sensorValue*convert;
    
    SuperMax=SuperMaxValue+finalValue;
    Max=MaxValue+finalValue;
